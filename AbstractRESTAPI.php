@@ -8,7 +8,6 @@ abstract class REST_API
   protected $verbs = null;
   protected $method = null;
   protected $endpoint = null;
-  protected $allowedIp = [];
 
   public function __construct($request)
   {
@@ -16,12 +15,7 @@ abstract class REST_API
     header('Access-Control-Allow-Methods: GET, POST, DELETE');
     header('Content-Type: application/json; charset=utf-8');
 
-
     $this->method = $_SERVER['REQUEST_METHOD'];
-
-    /*echo '<pre>';
-    print_r($_SERVER);
-    echo '</pre>';*/
   
     $this->args = explode('/', rtrim($request, '/'));
     $this->endpoint = array_shift($this->args);
@@ -29,6 +23,8 @@ abstract class REST_API
     if (array_key_exists(0, $this->args) && !is_numeric($this->args[0])) {
       $this->verb = array_shift($this->args);
     }
+
+
 
     switch ($this->method) {
       case 'DELETE':
@@ -43,15 +39,6 @@ abstract class REST_API
         throw new \Exception('Method not allowed');
         break;
     }
-  }
-
-  private function controlPermission()
-  {
-    if (isset($_SERVER['REMOTE_ADDR'])
-        && in_array($_SERVER['REMOTE_ADDR'], $this->allowedIp)) {
-      return true;
-    }
-    return false;
   }
 
 
@@ -95,6 +82,7 @@ abstract class REST_API
   {
     $status = [
       200 => 'OK',
+      401 => 'Unauthorized',
       403 => 'Forbidden',
       404 => 'Not Found',
       405 => 'Method Not Allowed',
