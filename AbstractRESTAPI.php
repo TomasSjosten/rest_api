@@ -5,7 +5,7 @@ namespace Tomas\REST_API;
 abstract class REST_API
 {
   protected $args = null;
-  protected $verbs = null;
+  protected $verb = null;
   protected $method = null;
   protected $endpoint = null;
 
@@ -23,7 +23,6 @@ abstract class REST_API
     if (array_key_exists(0, $this->args) && !is_numeric($this->args[0])) {
       $this->verb = array_shift($this->args);
     }
-
 
 
     switch ($this->method) {
