@@ -4,15 +4,22 @@ namespace Tomas\REST_API;
 
 abstract class REST_API
 {
+  // Arguments - values from GET, POST or DELETE requests
   protected $args = null;
+
+  // Verb - can be used to uniquely identify resource. Both Numeric and !numeric
   protected $verb = null;
+
+  // Method used when requesting the API (POST, PUT, GET...)
   protected $method = null;
+
+  // Which endpoint to access
   protected $endpoint = null;
 
   public function __construct($request)
   {
     header("Access-Control-Allow-Orgin: {$_SERVER['HTTP_HOST']}");
-    header('Access-Control-Allow-Methods: GET, POST, DELETE');
+    header('Access-Control-Allow-Methods: GET, POST, DELETE, PUT');
     header('Content-Type: application/json; charset=utf-8');
 
     $this->method = $_SERVER['REQUEST_METHOD'];
@@ -20,18 +27,26 @@ abstract class REST_API
     $this->args = explode('/', rtrim($request, '/'));
     $this->endpoint = array_shift($this->args);
     
-    if (array_key_exists(0, $this->args) && !is_numeric($this->args[0])) {
+    if (array_key_exists(0, $this->args)) {
       $this->verb = array_shift($this->args);
     }
 
+    if (array_key_exists(0, $this->args)) {
+      $this->response("Bad request", 400);
+      throw new \Exception("Bad request. Too many verbs given");
+    }
 
     switch ($this->method) {
       case 'DELETE':
       case 'POST':
-        $this->args = ($this->cleanInput($_POST));
+        $this->args = $this->cleanInput($_POST);
         break;
       case 'GET':
-        $this->args = ($this->cleanInput($_GET));
+        $this->args = $this->cleanInput($_GET);
+        break;
+      case 'PUT':
+        parse_str($this->cleanInput(file_get_contents("php://input")), $putValues);
+        $this->args = $this->cleanInput($putValues);
         break;
       default:
         $this->response("Method not allowed", 405);
@@ -81,6 +96,7 @@ abstract class REST_API
   {
     $status = [
       200 => 'OK',
+      400 => 'Bad request',
       401 => 'Unauthorized',
       403 => 'Forbidden',
       404 => 'Not Found',
